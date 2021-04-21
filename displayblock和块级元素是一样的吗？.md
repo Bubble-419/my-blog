@@ -15,7 +15,7 @@
 
 再看看mdn对display属性值的“翻译”，会觉得更有意思。
 
-<img src="C:\Users\胖可丁\AppData\Roaming\Typora\typora-user-images\image-20210421235503265.png" alt="image-20210421235503265" style="zoom:80%;" />
+(https://github.com/Bubble-419/myblog/blob/main/images/image-20210421235503265.png)
 
 实际开发中，右边的写法是不被支持的，但是却极有效地帮助我理解了`display`这个属性。
 
