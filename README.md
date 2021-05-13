@@ -1,4 +1,4 @@
-# myblog
-Blogs that collecting some questions asked&amp;answerd by myself
+# my-blogs
 
-看书学到或者平时想到的一些小问题，尽量都记录下来输出一下，可能会很粗糙，不完美，但是没关系！不和别人比，只和自己比！
+记录一下学习笔记/思考的一些小问题/...
+每天进步一点点！不和别人比，只和自己比！
