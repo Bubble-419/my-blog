@@ -31,7 +31,7 @@
 
      ```js
      export default{
-         setUp(props, { attrs, slots, emit }){
+         setup(props, { attrs, slots, emit }){
              ...
          }
      }
@@ -41,7 +41,7 @@
 
 ### 5.1.2 `setup`选项的返回值
 
-通常我们会返回一个对象，模板是可以访问`setUp`选项返回的对象property的，但是要注意**返回的`refs` 会被自动解开，所以无需再使用`.value`来访问值**了。
+通常我们会返回一个对象，模板是可以访问`setup`选项返回的对象property的，但是要注意**返回的`refs` 会被自动解开，所以无需再使用`.value`来访问值**了。
 
 ```vue
 <!-- 官文里的例子 MyBook.vue -->
@@ -141,7 +141,7 @@
           // setup选项开始
           setup(props){
               // 1. 获取user对象
-              // toRefs可以用来为源响应式对象上的某个 property 新创建一个 ref，比如此处pros对象的user property。该ref对象可以被传递，且会与源property形成响应式连接
+              // toRefs可以用来为源响应式对象上的某个 property 新创建一个 ref，比如此处props对象的user property。该ref对象可以被传递，且会与源property形成响应式连接
               const { user } = toRefs(props, 'user');
               
               // 2. 获取组合式函数的返回值
@@ -194,7 +194,7 @@
    
    export default {
        // 省略组件其它部分
-       setUp() {
+       setup() {
            // 2. 声明响应式变量
            const location = ref('North Pole');
            const geolocation = reactive({
@@ -217,7 +217,7 @@
    import { inject } from 'vue';
    
    export default {
-       setUp() {
+       setup() {
            // 2. 使用inject
            // 两个参数分别为 要inject的property名称 和 赋予property的默认值（可选）
            const userLocation = inject('location', 'The Universe');
