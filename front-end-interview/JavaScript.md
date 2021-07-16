@@ -1,4 +1,4 @@
-# Javascript知识点总结
+# Javascript面试基本功知识点总结
 
 ## 数据类型
 
@@ -97,4 +97,387 @@
    首先我们需要知道，`NaN`是一个数值，因此要判断某个值是否是`NaN`时，**第一步是进行数据类型的转换，第二步才是判断是否为`NaN`。**
 
    如果一个值可以转换为数值，则`isNaN()`会返回false，反之则true。
+
+
+
+7. #### 基本数据类型中的`Symbol`有什么用？
+
+   **`Symbol`值是唯一、不可变的值。**
+
+   用处：
+
+   - **可以作为对象独一无二的属性名**
+
+     对象的属性名可以是字符串或者`Symbol`，凡是`Symbol`的属性名，都不会与其他属性产生冲突。
+
+   - **可以用于定义对象非私有但仅用于内部的方法**
+
+     本质上还是定义对象的唯一属性名，但是因为`Symbol`值作为对象的属性名时不会被常规方法遍历得到，所以可以用于定义仅用于内部的方法。
+
+   注意点：
+
+   - `Symbol`值没有包装类，直接使用`Symbol()`声明
+   - `Symbol()`的参数仅用于对`Symbol`值的描述，不会影响`Symbol`值的唯一性
+   - 如果需要复用`Symbol`值，需要在全局符号注册表中用`Symbol.for()`注册
+
+
+
+8. #### 隐式的类型转换有哪些情况？
+
+   - **四则运算符中的隐式转换**：
+
+     - 加法操作中如果有一个操作数是字符串，就会把另一个操作数的类型转换为字符串
+     - 其他操作中只要有一个操作数是数值，就会把另一个操作数转换为数值
+
+   - **等于`(==)`和不等于`(!=)`操作符中的隐式转换**：
+
+     等于和不等于操作符会在比较前进行类型转换（全等和不全等操作符不会强转类型）。
+
+     - 有布尔，转数值
+
+     - 字符和数值，转数值
+
+     - `null`和 `undefined`，不能转，但是`null == undefined`
+
+     - `NaN`不用转，和谁比都是不相等
+
+     - 有一个是对象，调用`valueOf()`比较原始值
+
+       两个都是对象，比较是否是同一个对象
+
+
+
+## 数据类型判断
+
+1. #### 类型判断有哪几种方式？
+
+   - **`typeof`操作符**
+
+     `typeof`通常用于**基本数据类型的判断**，因为原始值使用`typeof`来判断类型是很方便的，但是引用值使用`typeof`时，只会得到`function`或`object`的结果，并不能很直接的判断出引用值的类型。
+
+     `typeof`操作符有几个注意点：
+
+     （1） **不能判断`null`类型**。如果对`null`使用`typeof`，结果会是`object`，这是因为null的意义就是空指针对象。
+
+     （2） **`typeof`操作符是未声明变量的唯一有效操作**，返回结果是`undefined`。
+
+   - **`instanceof`操作符**
+
+     `instanceof`通常用于**判断原型和实例之间的关系**，即通过原型链的方式来判断对象的类型。
+
+     `instanceof`的原理是检测构造函数的`prototype`属性是否出现在实例对象的原型链上，具体原理见第二道题。
+
+   - **`Object.prototype.toString.call()`**
+
+     **能判断的方式最完整**。
+
+     ```javascript
+     console.log(Object.prototype.toString.call([])); // [object Array]
+     ```
+
+     但是要注意，这个方式没办法判断出实例对象和原型的关系。
+
+     ```js
+     /*
+     父类SuperType 子类SubType
+     let instance = new SubType();
+     */
+     
+     console.log(Object.prototype.toString.call(instance)); // [object Object] 打印结果与父类无关
+     console.log(instance instanceof SuperType); // true
+     ```
+
+   - **`isXXX`的API**
+
+     **判断特定类型的API**，比如`isArray()`、`isNaN()`等。
+
+     
+
+2. #### `instanceof`操作符的原理是什么？
+
+   首先要知道`instanceof`的语法是：`object instanceof constructor`，即 `instanceof`检测的是**实例对象和构造函数**二者的关系，再进一步讲，它**检测构造函数的`prototype`属性是否出现在实例对象的原型链上**。
+
+   那么 `instanceof`是怎么知道`constructor`的原型对象有没有在`object`的原型链上出现过的呢？
+
+   ```js
+   // 模拟instanceof的查找过程
+   function instance_of(obj, constructor){
+     // 实例对象的原型链
+     let obj_proto = obj.__proto__;
+     // 构造函数的原型对象    
+     let prototype = constructor.prototype;
+       
+     // 循环遍历obj的原型链
+     while(obj_proto !== null){
+       // 说明constructor的原型对象有出现在obj的原型链上，返回true
+       if(obj_proto === prototype) return true;
+       obj_proto = obj_proto.__proto__;
+     }
+       
+     // obj_proto为null时仍未返回true，则说明找不到
+     return false;
+   }
+   ```
+   
+   
+
+## 对象
+
+### `new`操作符
+
+1. #### `new`操作符做了什么事？
+
+   (1) 在内存中创建一个新对象
+
+   (2) 将新对象的`__proto__`属性（实际上是`[[prototype]]`特性）指向构造函数`constructor`的`prototype`属性，即原型对象
+
+   (3) 将构造函数的`this`指向新对象
+
+   (4) 执行构造函数
+
+   (5) 构造函数返回了一个非空对象 ? 该非空对象 : 新对象
+
+   简单概括，`new`操作符会**调用构造函数，与原型对象链接，并返回一个对象**，达到**创建实例对象**的效果。
+
+2. #### `new`操作符返回不同类型时有什么表现？
+
+   从`new`操作符行为的第五步可以知道：
+
+   当构造函数**没有显式定义返回值为某个对象**时，`new`操作符会**返回它第一步创建的那个新对象**；
+
+   而一旦构造函数**有返回一个非空对象**，那么即使中间那几步仍然会正常进行，也不会返回我们想创建的新对象，而是**返回这个非空对象**。
+   
+   在调用类构造函数时，如果把类构造函数的返回对象修改成另一个非空对象，会导致类与实例对象通过`this`而产生的连接断掉，所以此时再对实例对象使用`instanceof`操作，也不会检测出和父类有关联。
+
+### 原型
+
+1. #### 谈谈你对原型的理解。
+
+   - **原型其实就是原型对象**，原型对象中**包含了可以被对象实例共享的属性和方法**，其中最重要的属性就是`constructor`，其指向与原型对象关联的构造函数。
+   - （原型有什么用？）当我们希望所有对象实例共享一些方法时，如果写在构造函数里，所有实例都要创建相同作用的函数，导致浪费内存；如果写在全局作用域里再由构造函数引用，又会导致污染全局作用域。这时候就可以考虑把需要共享的方法（或属性）写在原型对象里。
+   - 原型对象的`constructor`属性指向与之关联的构造函数，而构造函数的`prototype`属性又会指向该原型对象，这二者是循环引用的关系。
+   - 所有实例对象都可以通过`__proto__`指针找到原型对象，说明实例和原型之间是有显性关系的，而实例和构造函数之间却没有。所有对象的顶层原型对象都是`Object`（原型链中`Object`的原型是`null`)。
+
+### 继承
+
+1. #### JavaScript如何实现继承？
+
+   - ##### **原型链继承**
+
+     > **（1） 什么是原型链？**
+
+     ​		实例对象的`__proto__`指针指向原型对象，那么如果实例对象的原型对象是另一个类的实例对象，就形成了链式关系。
+
+     > **（2） 怎么利用原型链实现继承？**
+
+     ```javascript
+     // 父类构造函数
+     function SuperType(superPro){
+       this.superProperty = superPro;
+     }
+     
+     // 父类原型对象上的方法
+     SuperType.prototype.getSuperProperty = function() {
+       return this.superProperty;
+     }
+     
+     // 子类构造函数
+     function SubType(subPro){
+       this.subProperty = subPro;
+     }
+     
+     // **把子类的原型对象重写为父类的一个实例对象，调用父类的构造函数，相当于把子类的原型对象修改为一个__proto__指针指向Supertype.prototype的对象
+     SubType.prototype = new SuperType();
+     
+     // 子类原型对象上可以再定义自己的方法，也可以重写父类方法
+     SubType.prototype.getSubProperty = function() {
+       return this.subProperty;
+     }
+     ```
+
+     > **（3） 需要注意的是：**
+
+     ​	**子类实例对象的原型对象，实际上是父类的一个实例对象**。
+
+     > **（4）原型链继承的缺点：**
+
+     ​			对父类构造函数中定义的**引用值属性**的修改操作会造成多个子类实例对象属性值被污染（牵一发而动全身）；
+
+     ​			子类在实例化时不能给父类的构造参数传参，因为子类实例化时无法访问到父类的构造函数。
+
+     
+
+   - ##### 经典继承（盗用构造函数）
+
+     > **怎么实现？**
+   
+     **通过`call`或`apply`方法修改父类构造函数的执行上下文对象**，达到劫持构造函数的效果。
+   
+     ```javascript
+     // 父类定义同上
+     
+     // 子类构造函数
+     function SubType(subPro){
+       // **利用call方法把当前对象作为上下文来执行父类构造函数，并传参
+       SuperType.call(this, 'super');
+       this.subProperty = subPro;
+     }
+     
+     // 测试
+     let instance = new SubType('sub');
+     
+     console.log('subPro:' + instance.getSubProperty()); // 输出sub
+     console.log(`superProperty:${instance.subProperty}`); // 输出super，说明子类实例对象中存在superProperty
+     // console.log('getSuperProperty:' + instance.getSuperProperty()); 报错，无法访问父类原型中定义的方法
+     
+     console.log(instance);
+     // 输出结果显示该实例对象含有subProperty和superProperty两个属性，但是其原型对象是Object
+     ```
+   
+     由此可以总结出盗用构造函数实现继承的特点。
+   
+     - **直接继承父类构造函数中定义的属性，并内化成自己的属性**，解决了修改引用值属性导致的属性污染问题。
+   
+     - 子类的构造函数中盗用了父类的构造函数，使得**子类实例化时可以访问父类构造函数**，也就可以给父类构造函数传参。
+
+     - **没有对子类的原型对象进行修改操作，因此子类的原型还是`Object`，子类实例也就无法访问父类原型对象定义的方法了**。
+
+       
+
+   - ##### 组合继承（原型链+盗用构造函数）
+   
+     > **怎么实现？**
+   
+     结合使用**原型链继承来继承父类方法，盗用构造函数来继承父类属性**。
+     
+     ```javascript
+     // 父类构造函数
+     function SuperType(superPro){
+       this.superProperty = superPro;
+       this.colors = ['black','red'];
+     }
+     
+     // 父类原型对象上的方法
+     SuperType.prototype.getSuperProperty = function() {
+       return this.superProperty;
+     }
+     
+     // 子类构造函数
+     function SubType(subPro){
+         // **继承父类的属性
+       SuperType.call(this, 'super');
+       this.subProperty = subPro;
+     }
+     
+     // **继承父类方法
+     SubType.prototype = new SuperType();
+     ```
+     
+     
+     
+   - ##### 原型式继承
+   
+     > **怎么实现？**
+   
+     两种方式如下：
+     
+     ```javascript
+     let animal = {
+       name:'pig',
+       friends: ['dog','cat'],
+       location: 'forest',
+     }
+     
+     // **1. 创建一个临时构造函数，把作为传参的对象当作该临时构造函数的原型对象，返回这个临时构造函数的实例
+     function object(obj){
+       function f(){};
+       f.prototype = obj;
+       return new f();
+     }
+     let anotherAnimal = object(animal);
+     
+     // **2. ES5通过Object.create()对原型式继承进行了规范化，但他们的作用是一样的，即将传参对象作为新建对象的原型对象
+     let anotherAnimal2 = Object.create(animal);
+     // 可以定义或覆盖属性
+     let anotherAnimal3 = Object.create(animal， {
+                                        name: {
+                                       	value: 'cat', 
+                                        }
+                                       });
+     ```
+     
+     原型式继承适用于**不自定义类型（即不自定义构造函数），通过原型的方式来实现对象之间的信息共享**的情况。
+     
+     和原型链继承相同的是，原型式继承把一个实例对象作为另一个对象的原型对象，可以继承该对象的属性和方法，
+     
+     但是同样会有“牵一发而动全身”的情况，即原型对象中的引用值属性一旦被修改，就会污染所有实例对象的属性值。
+   
+   
+   
+   - ##### 寄生式继承
+   
+     > **怎么实现？**
+   
+     **在原型式继承的基础上，对创建的新对象进行增强后返回**。
+   
+     ```javascript
+     function createAnimal(origin) {
+       let clone = Object.create(origin);
+       // 增强对象
+       clone.eatable = true;
+       return clone;
+     }
+     ```
+   
+     寄生式继承基于原型式继承的方式、构造函数创建对象的思路，因此它**同样适用于不关注类型和构造函数、而更关注对象的信息共享的情况**。
+   
+     它的缺点也很明显，和构造函数创建对象一样会导致对象里的函数难以重用，和原型式继承一样会污染引用值属性。
+   
+     
+   
+   - ##### 寄生式组合继承
+   
+     > **为什么要使用寄生式组合继承？**
+     
+     **为了减少调用父类构造函数产生的开销**。
+     
+     这个开销有两方面：第一，用组合继承来实现继承时，**会调用两次父类的构造方法**；第二，调用父类构造函数来创建实例对象作为子类原型对象时，**这个原型对象的属性实际上是不必要的**，因为我们已经用盗用构造函数来继承了父类的属性了。
+     
+     > **怎么实现？**
+     
+     寄生式组合继承的**核心**就在于**用寄生式继承的方式来继承父类的方法**，而不是用创建父类实例对象的方式，这样就只会在继承属性时调用一次父类的构造函数，也不会在原型对象上产生多余的属性，同时还保留了原型链。
+     
+     ```js
+     // **继承父类方法
+     
+     // 组合式继承：调用父类构造函数，创建一个实例对象来当作子类的原型对象
+     SubType.prototype = new SuperType();
+     
+     // 寄生式继承：
+     let prototype = Object.create(SuperType.prototype);
+     prototype.constructor = SubType();
+     SubType.prototype = prototype;
+     ```
+     
+     
+     
+   - **ES6：`extends`关键字**
+   
+     > **使用`extends`时，父类可以是什么？**
+   
+     `extends`不仅可以继承一个类，还能继承一个单独的构造函数。这是因为`extends`本**质上可以继承任何含有构造函数（`[[construct]]`）和原型的对象**。
+   
+     > **`extends`关键字继承了父类的什么？**
+   
+     同样是继承父类的属性和方法。
+   
+     但是要明白，**ES6中类的定义能很有效地分割原型对象和实例对象**。这是因为类块中定义的方法都会被当作原型对象上的方法，而类中用`this`关键字声明的属性又都属于不同的实例对象。
+   
+     > **使用ES6的`extends`关键字和使用ES5的其他方法来实现继承有什么不同？**
+   
+     （1）首先要明白，ES6的`extends`其实是一个语法糖，其背后依然是原型链。
+   
+     （2）ES5实现继承虽然方法各异，但是都是直接处理构造函数和`prototype`对象；而`extends`可以避免我们直接操作这二者。
+   
+     （3）使用`extends`继承父类后，子类可以通过`super`关键字来访问父类的构造函数和静态方法。当子类没有显式定义自己的构造函数时，会默认继承父类的构造函数；若显式定义了构造函数，则必须引用`super()`或返回一个对象。
 
