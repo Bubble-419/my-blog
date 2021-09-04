@@ -1,4 +1,4 @@
-# Javascript面试基本功知识点总结
+# JavaScript面试基本功知识点总结-基础篇
 
 ## 数据类型
 
@@ -30,7 +30,7 @@
 
    
 
-3. #### **`undefined`和`null`的区别是什么？**
+3. #### `undefined`和`null`的区别是什么？
 
    - **意义不同**：`undefined`是未初始化变量，`null`是对象空指针。
 
@@ -61,9 +61,9 @@
 
 5. #### **不同类型与数值类型之间的转换规则是什么？**
 
-   首先要知道，不同类型转换为数值类型有三种方式：**`Number()`转型函数、`parseInt()`、`parseFloat()`**.
+   首先要知道，不同类型转换为数值类型有三种方式**：`Number()`转型函数、`parseInt()`、`parseFloat()`.**
 
-   **前者可以处理任何数据类型**：
+   **Number()可以处理任何数据类型**：
 
    | 数据类型  | 数值                                                         |
    | --------- | ------------------------------------------------------------ |
@@ -102,7 +102,7 @@
 
 7. #### 基本数据类型中的`Symbol`有什么用？
 
-   **`Symbol`值是唯一、不可变的值。**
+   `Symbol`**值是唯一、不可变的值。**
 
    用处：
 
@@ -151,7 +151,7 @@
 
 1. #### 类型判断有哪几种方式？
 
-   - **`typeof`操作符**
+   - `typeof`操作符
 
      `typeof`通常用于**基本数据类型的判断**，因为原始值使用`typeof`来判断类型是很方便的，但是引用值使用`typeof`时，只会得到`function`或`object`的结果，并不能很直接的判断出引用值的类型。
 
@@ -159,15 +159,15 @@
 
      （1） **不能判断`null`类型**。如果对`null`使用`typeof`，结果会是`object`，这是因为null的意义就是空指针对象。
 
-     （2） **`typeof`操作符是未声明变量的唯一有效操作**，返回结果是`undefined`。
+     （2） `typeof`**操作符是未声明变量的唯一有效操作**，返回结果是`undefined`。
 
-   - **`instanceof`操作符**
+   - `instanceof`操作符
 
      `instanceof`通常用于**判断原型和实例之间的关系**，即通过原型链的方式来判断对象的类型。
 
      `instanceof`的原理是检测构造函数的`prototype`属性是否出现在实例对象的原型链上，具体原理见第二道题。
 
-   - **`Object.prototype.toString.call()`**
+   - `Object.prototype.toString.call()`
 
      **能判断的方式最完整**。
 
@@ -187,7 +187,7 @@
      console.log(instance instanceof SuperType); // true
      ```
 
-   - **`isXXX`的API**
+   - ** `isXXX` 的API**
 
      **判断特定类型的API**，比如`isArray()`、`isNaN()`等。
 
@@ -535,27 +535,268 @@
 
 ### `this`
 
+1. #### `this`的指向规则
+
+   - **箭头函数**
+
+     箭头函数的`this`指向的是**声明函数时的上下文**
+
+   - **默认规则**
+
+     普通函数的`this`指向把函数当成方法来调用的**执行上下文**。
+
+     但是要注意，** `this`是函数的内部对象**，不能再向内传递，因此当存在闭包时，闭包的携带作用域里是不会存在上级作用域的`this`对象的。
+
+     ```js
+     var name = 'window';
+     let a = {
+       name: 'Jhon',
+       getName: function(){
+         console.log(this.name); // Jhon
+         return function(){
+           console.log(this.name); // window
+         }
+       }
+     }
+     a.getName()();
+     ```
+   
+   - **bind**
+
+     利用`bind`修改函数的`this`指向，要注意调用`bind()`返回的是一个函数。
+   
+     ```js
+     function b(){
+       console.log(this);
+     }
+     // 第一种方式
+     var c = b.bind(a);
+     c();
+     // 第二种方式
+     b.bind(a)();
+     ```
+   
+   - **apply/call**
+   
+     利用`apply`或`call`也可以修改函数`this`的指向，修改后会直接调用，但是不会影响到调用原函数时的`this`对象。
+   
+     ```js
+     function b(){
+       console.log(this);
+     }
+     b.apply(2); // 2
+     b(); // window
+     ```
+   
+   - **new**
+   
+     箭头函数之外的函数都可以作为`new`关键字的构造函数，此时函数中的`this`一定是创建的新对象。
+   
+   **注意**：
+   
+   1. 当应用多条绑定规则时，优先级是**：`new` > `bind` > `apply/call` > 默认规则**
+   2. 注意函数名只是指向函数的指针
+   3. 一定要留意函数的执行上下文对`this`指向的影响
+   4. 注意全局对象上的方法（比如`setTimeout`）的回调方法的`this`指向的是全局对象
+   5. 如果把`null`或`undefined`或空传入 `bind` 或 `apply/call` 方法中，相当于把`this`指向全局对象
+
 ### 闭包
 
+1. #### 谈谈对闭包的理解。
 
+   **闭包是指能够访问外部函数作用域，引用了外部变量的函数。**
+
+   既然引用了外部函数的变量，那么闭包就相当于携带了一个外部函数的作用域。这个被携带函数在执行完毕后，其执行上下文会被销毁，但是活动对象（变量对象）会被保留下来。因为闭包被调用时，其作用域链包括了对外部函数的变量对象的引用，所以只有闭包被销毁后，被携带函数的变量对象才会被释放。
+
+   闭包的作用是：**可以保护函数的私有变量（定义在函数或块中的变量）**。
+   
+   但是闭包因为会携带其他函数的作用域，所以会占用更多的内存，不能过度使用闭包。
 
 
 
 ## 深浅拷贝
 
+1. #### 什么是深拷贝和浅拷贝？浅拷贝和赋值有什么区别？
 
+   **浅拷贝**：创建一个新对象，其**拷贝了原对象的第一层引用**。即当原对象的属性值是**基本数据类型**时，**直接拷贝其值**；当原对象的属性值是**对象**时，将**拷贝指向该对象的指针**作为属性值。
+
+   因此，拷贝后对象若改变类型为引用值的属性值，会影响到原对象。
+
+   浅拷贝和赋值的区别在于，对对象的赋值并不会创建一个新对象，其规则等同变量复制。
+
+   <img src="C:\Users\胖可丁\AppData\Roaming\Typora\typora-user-images\image-20210819094005471.png" alt="image-20210819094005471" style="zoom: 67%;" />
+
+   **深拷贝**：**创建一个新对象，将原对象从内存中完整地拷贝一份出来。拷贝后对象不会对原对象造成影响。**
+
+   <img src="C:\Users\胖可丁\AppData\Roaming\Typora\typora-user-images\image-20210819094557482.png" alt="image-20210819094557482" style="zoom:67%;" />
+
+   
+
+2. #### 怎么实现浅拷贝？
+
+   - **Object.assign()**
+
+     `Object.assign()`可以把任意多个源对象的可枚举属性值拷贝给目标对象，并返回拷贝后的目标对象。
+
+     其原理相当于以下代码：
+
+     ```js
+     function shallowCopy(target, source) {
+       for (let key in source) {
+         target[key] = source[key];
+       }
+       return target;
+     }
+     ```
+
+   - **扩展运算符**
+
+     利用扩展运算符实现浅拷贝时，可以取出参数对象的可枚举属性值拷贝给目标对象。
+
+     ```js
+     let source = {};
+     let target = {...source};
+     ```
+
+   - **数组方法：Array.slice()和Array.concat()**
+
+     当调用`slice()`和`concat()`而不传参时，相当于对数组进行浅拷贝。
+
+     
+
+3. #### 怎么实现深拷贝？
+
+   - **JSON.parse(JSON.stringify(obj))**
+
+     可以用JSON方法实现深拷贝，但是JSON并不支持JavaScript的所有类型，也无法解决循环引用问题。
+
+   - 自己实现深拷贝方法
+
+     ```js
+     function deepCopy(source, map = new WeakMap()) {
+       // 1. 对源对象进行类型判断，从而确定返回的拷贝后对象的类型
+       if (source instanceof Object) {
+         // 2. 解决循环引用导致的爆栈问题，如果map中已有该属性对象，则无需再遍历
+         if (map.has(source)) return map.get(source);
+         else if (source instanceof Array) {
+           target = [];
+         } else if (source instanceof Function) {
+           return function () {
+             return source.apply(this, arguments)
+           };
+         } else if (source instanceof RegExp) {
+           // 拼接正则
+           return new RegExp(source.source, source.flags);
+         } else if (source instanceof Date) {
+           return new Date(source);
+         } else {
+           target = {}
+           // 用map保存遍历过的属性对象
+           map.set(source, target);
+           for (let key in source) {
+             target[key] = deepCopy(source[key], map);
+           }
+         }
+         return target;
+       } else return source;
+     }
+     ```
+
+     
 
 ## 事件
 
-### JS事件机制
+1. #### 什么是宏任务和微任务？
 
-### 事件冒泡
+   - 宏任务是由宿主发起的任务，包括：**script（外层同步代码）、`window.setTimeout()`、`window.setInternal()`、`window.requestAnimationFrame()`（要求浏览器在下次重绘之前调用指定的回调函数更新动画）、`setImmediate ()`（Node.js）**，最常见的是script和定时器。
 
-### 事件捕获
+   - 微任务是由JavaScript引擎发起的任务，包括：**Promise状态改变后的回调函数、MutationObserver（监视DOM树的变化，变化时调用回调函数）**等等，最常见的微任务是Promise状态改变后的回调函数。
 
-### 事件循环
+     微任务**产生于宏任务的执行期间，只有在当前JS执行栈为空时才会执行微任务。**
 
-### 代理
+     **当前宏任务产生的微任务永远先于下一个宏任务前执行**，执行微任务期间，当前宏任务并未完全结束。
 
+   > 举个例子：小明去银行办理业务，叫号轮到小明时，柜员开始为小明办理他的主要业务（宏任务），主要业务办理完毕后（执行栈为空），柜员询问小明是否还有其他业务需要办理（查询微任务队列是否有微任务），柜员为小明办理其他业务（微任务），全部办理完毕后才会轮到下一位叫号（下一宏任务）。
 
+   
 
+2. #### 什么是事件循环(event loop)？
+
+   event loop是JavaScript执行机制中的一环，它的作用在于调控执行机制，**确定下一个需要执行的任务**。
+
+   它的每一次循环称为一次`tick`，**循环过程**如下：
+
+   - 当前宏任务执行完毕后，若执行栈为空，判断微任务队列中是否存在需要执行的微任务
+   - 执行所有微任务
+   - 如果宿主为浏览器，判断是否有必要渲染页面
+   - 执行下一个宏任务，开始新一轮`tick`
+
+   要注意，真正执行任务的是JavaScript的主线程执行栈，event loop只是起到一个发号施令的作用。
+
+   <img src="C:\Users\胖可丁\AppData\Roaming\Typora\typora-user-images\image-20210830221237291.png" alt="image-20210830221237291" style="zoom:67%;" />
+
+   
+
+3. #### JavaScript的执行机制是什么？
+
+   1. **JavaScript引擎是单线程的，同一时间段只能执行一个任务**。
+
+      而**浏览器是多线程的**，其主要线程包括：
+
+      - **GUI渲染线程**
+
+        负责渲染页面，解析HTML、CSS，构建DOM树，绘制页面等等；
+
+        页面重绘和回流；
+
+        与JS引擎互斥，即JS执行时会阻塞页面更新。
+
+      - **JS引擎线程**
+
+        是JavaScript的内核，负责JavaScript代码的执行
+
+      - **事件触发线程（event table)**
+
+        用于控制事件循环，管理任务队列；
+
+        **当遇到事件绑定或者异步操作时，事件触发线程会将它们添加到对应的线程中进行处理，有了处理结果以后，事件触发线程会将回调函数添加到任务队列，等待JS引擎线程处理**；
+
+        事件触发线程并不执行任务，只是负责跟踪任务，并及时将它们推进任务队列。
+
+      - **定时器线程**
+        `setTimeout()`和`setInterval()`所处的线程就是定时器线程，由于JavaScript引擎线程是单线程的，所以需要单独线程来计时并触发定时。
+
+      - **异步http请求线程**
+
+        负责执行异步请求。
+
+   2. 首先，最外层的script会作为第一个宏任务开始执行。
+
+      当遇到同步代码时，推入主线程执行栈执行；遇到异步代码时，判断其属于宏任务还是微任务；
+
+      将异步任务推给事件触发线程(event table)，即在主线程内，这些任务属于被挂起的状态，而在事件触发线程内，宏任务会被推进相应线程处理，并注册回调函数，微任务直接注册回调函数；
+
+      异步任务有了处理结果后，事件触发线程会将它们推进任务队列(event quene)，宏任务推进宏任务队列(tasks quene)，微任务推进微任务队列(microtasks quene)；
+
+      第一个宏任务执行完毕后，会进入事件循环(event loop)，JS引擎会执行事件循环指示的任务，直到执行栈和所有队列都为空。
+      
+      
+
+4. #### 什么是事件冒泡和事件捕获？
+
+   **事件流描述了页面接收事件的顺序**，IE和Netscape提出了两种完全相反的事件流模型，分别是事件冒泡和事件捕获。
+
+   - **事件冒泡**：事件被定义为由最具体的那个元素触发，逐级向上传播至没有那么具体的元素（文档）。现代浏览器都支持事件冒泡，且事件会一直冒泡到window对象。
+   - **事件捕获**：最不具体的节点最先收到事件，而最具体的节点最后收到事件。事件捕获是为了在事件到达最终目标之前拦截事件。
+
+   DOM2规范中规定了**事件流包括三个阶段：事件捕获、到达目标和事件冒泡**。
+
+   DOM2的事件处理程序方法` element.addEventListener(event, function, useCapture)`的第三个参数`useCapture`是一个布尔值，为`true`时表示在捕获阶段调用事件处理程序，为`false`时表示在冒泡阶段调用事件处理程序，默认值为`false`.
+
+   
+
+5. #### 什么是事件委托（事件代理）？
+
+   1. 事件对象是能够传给事件处理程序的唯一参数，其常见的属性和方法包括：`type`(返回被触发事件类型的字符串)，`target`(事件目标)、`currentTarget`(当前事件处理程序的所在元素)、`stopPropagation()`(阻止事件冒泡)、`preventDefault()`(阻止默认事件)等。
+   2. 事件委托的原理：**不是给每个子节点都设置事件监听器，而是给父节点设置事件监听器，利用冒泡原理影响每个子节点。**
+   3. 使用事件委托可以减少事件处理函数来做到性能优化，在事件处理函数中要善用事件对象的各个属性和方法。
