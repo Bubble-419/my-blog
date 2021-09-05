@@ -74,6 +74,8 @@
 
       第一个宏任务执行完毕后，会进入事件循环(event loop)，JS引擎会执行事件循环指示的任务，直到执行栈和所有队列都为空。
 
+      ![image-20210905190845213](C:\Users\胖可丁\AppData\Roaming\Typora\typora-user-images\image-20210905190845213.png)
+      
       
 
 4. #### 什么是事件冒泡和事件捕获？
